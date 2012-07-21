@@ -1,0 +1,6 @@
+DiffBot API wrapper, uses urllib3
+
+  >>> from diffbot import DiffBot
+  >>> api = DiffBot('<my api token>')
+  >>> api.article('http://google.com', summary=True)
+  {...}
