@@ -13,6 +13,7 @@ setup(
     description='diffbot api',
     author='Andrey Popp',
     author_email='8mayday@gmail.com',
+    url="https://github.com/andreypopp/diffbot",
     py_modules=['diffbot'],
     include_package_data=True,
     zip_safe=False,
