@@ -9,6 +9,8 @@
 
 """
 
+import urllib
+import urlparse
 import simplejson as json
 from urllib3 import HTTPConnectionPool
 
@@ -34,20 +36,43 @@ class DiffBot(object):
         self.pool = pool
         self.token = token
 
-    def _json_request(self, url, data):
-        if not 'token' in data:
-            data['token'] = self.token
-        r = self.pool.request('GET', url, data)
+    def _get_request(self, url, params):
+        if not 'token' in params:
+            params['token'] = self.token
+        r = self.pool.request('GET', url, params)
+        return json.loads(r.data)
+
+    def _post_request(self, url, params, data):
+        if not 'token' in params:
+            params['token'] = self.token
+        url = add_params(url, params)
+        r = self.pool.urlopen(
+            'POST', url, body=data,
+            headers={'Content-Type': 'text/html'})
         return json.loads(r.data)
 
     def article(self, url, **params):
         """ Process ``url`` as an article"""
         data = {'url': url}
         data.update(params)
-        return self._json_request(self.API_ARTICLE, data)
+        if 'data' in params:
+            return self._post_request(self.API_ARTICLE, data, data.pop('data'))
+        else:
+            return self._get_request(self.API_ARTICLE, data)
 
     def frontpage(self, url, **params):
         """ Process ``url`` as a frontpage"""
         data = {'url': url}
         data.update(params)
-        return self._json_request(self.API_FRONTPAGE, data)
+        if 'data' in params:
+            return self._post_request(self.API_FRONTPAGE, data, data.pop('data'))
+        else:
+            return self._get_request(self.API_FRONTPAGE, data)
+
+def add_params(url, params):
+    """ Add params to ``url`` preserving ones already there"""
+    parsed = urlparse.urlparse(url)
+    parsed_qs = urlparse.parse_qsl(parsed.query)
+    parsed_qs = params.items() + parsed_qs
+    parsed = parsed._replace(query=urllib.urlencode(parsed_qs))
+    return urlparse.urlunparse(parsed)
